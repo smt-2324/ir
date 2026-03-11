@@ -1,0 +1,394 @@
+Practical - 1: Document Indexing and Retrieval (Inverted Index)
+documents = {
+    1: "information retrieval system",
+    2: "retrieval model and search engine",
+    3: "information processing and retrieval"
+}
+
+inverted_index = {}
+
+for doc_id, text in documents.items():
+    words = text.split()
+    for word in words:
+        if word not in inverted_index:
+            inverted_index[word] = []
+        inverted_index[word].append(doc_id)
+
+print("Inverted Index:")
+for word in inverted_index:
+    print(word, ":", inverted_index[word])
+
+query = "information"
+
+if query in inverted_index:
+    print("Documents containing word:", inverted_index[query])
+else:
+    print("Word not found")
+
+Practical - 2: Retrieval Models
+Boolean Model
+
+docs = {
+    1: {"information","retrieval"},
+    2: {"search","engine"},
+    3: {"information","search"}
+}
+
+# Predefined queries
+queries = ["information AND search", "information OR search"]
+
+for query in queries:
+    q = query.split()
+    result = []
+
+    for doc_id, words in docs.items():
+
+        if q[1] == "AND":
+            if q[0] in words and q[2] in words:
+                result.append(doc_id)
+
+        elif q[1] == "OR":
+            if q[0] in words or q[2] in words:
+                result.append(doc_id)
+
+    print("Query:", query)
+    print("Documents satisfying query:", result)
+    print()
+
+Vector Space Model (TF-IDF) 
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Training documents
+train_docs = [
+    "The sky is blue",
+    "The sun is bright"
+]
+
+# Test document
+test_doc = ["The sun in the sky is bright"]
+
+# TF-IDF Vectorization
+vectorizer = TfidfVectorizer()
+
+train_tfidf = vectorizer.fit_transform(train_docs)
+test_tfidf = vectorizer.transform(test_doc)
+
+# Convert to array
+print("Train TF-IDF Matrix:")
+print(train_tfidf.toarray())
+
+print("\nTest TF-IDF Matrix:")
+print(test_tfidf.toarray())
+
+# Cosine Similarity
+similarity = cosine_similarity(test_tfidf, train_tfidf)
+
+print("\nCosine Similarity with training documents:")
+print(similarity)
+
+Practical - 3: Spelling Correction
+
+def editDistRec(s1, s2, m, n):
+    if m == 0:
+        return n
+    if n == 0:
+        return m
+
+    if s1[m-1] == s2[n-1]:
+        return editDistRec(s1, s2, m-1, n-1)
+
+    return 1 + min(
+        editDistRec(s1, s2, m, n-1),    # Insert
+        editDistRec(s1, s2, m-1, n),    # Remove
+        editDistRec(s1, s2, m-1, n-1)   # Replace
+    )
+
+def editDistance(s1, s2):
+    return editDistRec(s1, s2, len(s1), len(s2))
+
+
+if __name__ == "__main__":
+    s1 = "kitten"
+    s2 = "sitting"
+
+    print("String 1:", s1)
+    print("String 2:", s2)
+    print("Edit Distance is", editDistance(s1, s2))
+
+Practical - 4: Precision Recall F-Score
+
+TP = 10
+FP = 20
+FN = 30
+
+precision = TP / (TP + FP)
+recall = TP / (TP + FN)
+f_score = 2 * (precision * recall) / (precision + recall)
+
+print("Precision:", precision)
+print("Recall:", recall)
+print("F-Measure:", f_score)
+print()
+
+Practical - 5: Text Categorization (Naive Bayes)
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load Dataset
+df = pd.read_csv("Dataset.csv")
+
+print("Dataset Preview:")
+print(df.head())
+
+# Combine text columns
+data = df["covid"] + " " + df["fever"]
+
+X = data.astype(str)
+y = df["flu"]
+
+# Split dataset into training and testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Text Vectorization
+vectorizer = CountVectorizer()
+
+X_train_counts = vectorizer.fit_transform(X_train)
+X_test_counts = vectorizer.transform(X_test)
+
+# Train Naive Bayes Classifier
+classifier = MultinomialNB()
+classifier.fit(X_train_counts, y_train)
+
+# Evaluate Model
+y_pred = classifier.predict(X_test_counts)
+
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred))
+
+# Test on New Data
+data1 = pd.read_csv("Test.csv")
+new_data = data1["covid"] + " " + data1["fever"]
+new_data_counts = vectorizer.transform(new_data.astype(str))
+predictions = classifier.predict(new_data_counts)
+
+print("\nPredictions on New Data:")
+print(predictions)
+print("Predicted Category:", prediction[0])
+
+Practical - 6:  Clustering (K-Means)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
+# Define documents
+documents = [
+    "The Tesla Model 3 is an electric car with a large battery pack",
+    "Electric cars like the Nissan Leaf help reduce carbon emissions",
+    "The Ford Mustang is a classic American muscle car with a V8 engine",
+    "Muscle cars are known for high horsepower and loud exhaust systems",
+    "The BMW 7 Series is a luxury car with advanced technology features",
+    "Luxury cars often come with premium leather seats and high-end sound systems"
+]
+
+# Create TF-IDF Vectorizer
+vectorizer = TfidfVectorizer(stop_words='english')
+
+# Convert documents into TF-IDF matrix
+X = vectorizer.fit_transform(documents)
+
+# Apply K-Means clustering
+kmeans = KMeans(n_clusters=3, random_state=0)
+kmeans.fit(X)
+
+# Print cluster labels
+print("\nCluster labels for each document:")
+
+for i, label in enumerate(kmeans.labels_):
+    print("Document", i+1, ": Cluster", label)
+
+Practical - 7: Web Crawling
+
+import requests
+import time
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+start_url = "https://www.python.org/"
+visited = set()
+queue = [start_url]
+index = {}
+
+max_pages = 3
+
+while queue and len(visited) < max_pages:
+    url = queue.pop(0)
+
+    if url in visited:
+        continue
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        text = soup.get_text(" ", strip=True)[:120]
+        index[url] = text
+        print("Indexed:", url)
+
+        for link in soup.find_all("a", href=True):
+            href = link["href"]
+
+            if "#" in href:   # skip page fragments
+                continue
+
+            full_link = urljoin(url, href)
+
+            if full_link not in visited and full_link not in queue:
+                queue.append(full_link)
+
+    visited.add(url)
+    time.sleep(1)
+
+print("\nFinal Index:\n")
+
+for url, text in index.items():
+    print(url)
+    print(text)
+    print()
+
+Practical - 8: PageRank Algorithm
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+import numpy as np
+
+start_url = "https://www.python.org/"
+pages = []
+links = {}
+
+# -------- Crawl few pages to build graph --------
+response = requests.get(start_url)
+soup = BeautifulSoup(response.text, "html.parser")
+
+for link in soup.find_all("a", href=True)[:5]:
+    url = urljoin(start_url, link["href"]).split("#")[0]
+    pages.append(url)
+
+pages = list(set(pages))
+
+for page in pages:
+    links[page] = []
+
+# -------- Simple PageRank Calculation --------
+n = len(pages)
+rank = {page: 1/n for page in pages}
+d = 0.85
+
+for _ in range(10):
+    new_rank = {}
+    for page in pages:
+        s = 0
+        for p in pages:
+            if page in links[p] and len(links[p]) > 0:
+                s += rank[p] / len(links[p])
+        new_rank[page] = (1-d)/n + d*s
+    rank = new_rank
+
+# -------- Output --------
+print("\nPageRank Results:\n")
+
+for page, score in rank.items():
+    print(page)
+    print("Rank:", round(score,4))
+    print()
+
+Practical - 9: Learning to Rank
+
+from sklearn import svm
+import numpy as np
+
+X_train = [
+    [5, 0.8, 1],
+    [3, 0.5, 0],
+    [6, 0.9, 1],
+    [2, 0.4, 0],
+    [4, 0.7, 1]
+]
+
+y_train = [1, 0, 1, 0, 1]
+model = svm.SVC(kernel='linear')
+model.fit(X_train, y_train)
+print("Model trained successfully!\n")
+
+# -------------------------------
+# Test Data (documents to rank)
+# -------------------------------
+
+X_test = [
+    [4, 0.6, 1],
+    [1, 0.3, 0],
+    [5, 0.85, 1],
+    [2, 0.9, 0],
+    [7, 0.6, 1],
+    [1, 1.0, 1]
+]
+
+# Predict relevance score
+scores = model.decision_function(X_test)
+
+ranking = sorted(zip(scores, X_test), reverse=True)
+
+print("Document Ranking:\n")
+
+for rank, (score, doc) in enumerate(ranking, start=1):
+    print("Rank", rank, "Features:", doc, "Score:", round(score,3))
+
+
+
+
+
+Practical - 10: Text Summerization
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+
+# Sample document
+text = """
+Information Retrieval is the process of obtaining relevant information from large collections of data.
+Search engines like Google use information retrieval techniques to provide accurate results.
+Text summarization helps in reducing long documents into shorter summaries.
+Question answering systems retrieve specific answers from a document.
+"""
+
+# ---------- TEXT SUMMARIZATION ----------
+sentences = text.split(". ")
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(sentences)
+scores = np.sum(X.toarray(), axis=1)
+summary_index = np.argmax(scores)
+
+print("\nSummary Sentence:")
+print(sentences[summary_index])
+
+# ---------- QUESTION ANSWERING ----------
+question = "What is information retrieval?"
+
+for sentence in sentences:
+    if "information retrieval" in sentence.lower():
+        answer = sentence
+        break
+
+print("\nQuestion:", question)
+print("Answer:", answer)
+
